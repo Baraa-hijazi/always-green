@@ -1,0 +1,6 @@
+[Unit]
+Description=always-green scheduled start
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl start ag-session.target

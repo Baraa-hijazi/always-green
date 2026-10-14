@@ -1,0 +1,14 @@
+[Unit]
+Description=always-green activity + Telegram reporting
+Requires=ag-xvfb.service
+# After= also means it is stopped before the browser, so the final screenshot shows Teams.
+After=ag-xvfb.service ag-browser.service
+PartOf=ag-session.target
+
+[Service]
+User=teams
+ExecStart=/opt/always-green/bin/keepalive.sh
+KillMode=mixed
+TimeoutStopSec=90
+Restart=on-failure
+RestartSec=10

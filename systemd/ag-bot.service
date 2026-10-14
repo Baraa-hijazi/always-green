@@ -1,0 +1,12 @@
+[Unit]
+Description=always-green Telegram bot
+Wants=network-online.target
+After=network-online.target ag-xvfb.service
+
+[Service]
+ExecStart=/opt/always-green/bin/bot.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

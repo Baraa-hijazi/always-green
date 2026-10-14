@@ -1,0 +1,11 @@
+# Start manually for the one-time login; localhost only, reach it via SSH tunnel.
+[Unit]
+Description=always-green VNC (localhost only)
+Requires=ag-xvfb.service
+After=ag-xvfb.service
+
+[Service]
+User=teams
+EnvironmentFile=/opt/always-green/config.env
+ExecStart=/usr/bin/x11vnc -display ${DISPLAY_NUM} -localhost -rfbport 5900 -forever -shared -nopw
+Restart=on-failure

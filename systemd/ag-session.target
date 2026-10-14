@@ -1,0 +1,5 @@
+[Unit]
+Description=always-green Teams session
+Requires=ag-xvfb.service
+After=ag-xvfb.service
+Wants=ag-browser.service ag-keepalive.service

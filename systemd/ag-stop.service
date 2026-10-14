@@ -1,0 +1,6 @@
+[Unit]
+Description=always-green scheduled stop
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl stop ag-session.target

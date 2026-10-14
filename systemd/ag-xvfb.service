@@ -1,0 +1,11 @@
+[Unit]
+Description=always-green virtual display
+
+[Service]
+User=teams
+EnvironmentFile=/opt/always-green/config.env
+ExecStart=/usr/bin/Xvfb ${DISPLAY_NUM} -screen 0 ${SCREEN_W}x${SCREEN_H}x24 -nolisten tcp
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
