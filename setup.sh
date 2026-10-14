@@ -16,11 +16,11 @@ for d in $SCHEDULE_DAYS; do
 done
 
 export DEBIAN_FRONTEND=noninteractive
-apt-get update -q
-apt-get install -y -q xvfb x11vnc xdotool imagemagick curl jq ufw fonts-liberation fonts-noto-color-emoji
+apt-get -o DPkg::Lock::Timeout=600 update -q
+apt-get -o DPkg::Lock::Timeout=600 install -y -q xvfb x11vnc xdotool imagemagick curl jq ufw fonts-liberation fonts-noto-color-emoji
 if ! command -v google-chrome >/dev/null; then
   curl -fsSLo /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-  apt-get install -y -q /tmp/chrome.deb
+  apt-get -o DPkg::Lock::Timeout=600 install -y -q /tmp/chrome.deb
   rm -f /tmp/chrome.deb
 fi
 
@@ -34,6 +34,10 @@ id teams &>/dev/null || useradd -m -s /bin/bash teams
 
 install -d "$DEST/bin"
 install -m 755 "$SRC"/bin/*.sh "$DEST/bin/"
+# Keep a chat id the bot already linked when re-running setup.
+if [[ -f $DEST/config.env ]] && grep -q '^TELEGRAM_CHAT_ID=.' "$DEST/config.env" && ! grep -q '^TELEGRAM_CHAT_ID=.' "$SRC/config.env"; then
+  sed -i "s|^TELEGRAM_CHAT_ID=.*|$(grep '^TELEGRAM_CHAT_ID=' "$DEST/config.env")|" "$SRC/config.env"
+fi
 install -m 640 -o root -g teams "$SRC/config.env" "$DEST/config.env"
 install -m 644 "$SRC"/systemd/* /etc/systemd/system/
 

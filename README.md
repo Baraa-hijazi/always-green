@@ -5,22 +5,17 @@ Keeps Microsoft Teams (web) active on a droplet during scheduled hours and repor
 How it works: Chrome runs Teams on a virtual display (Xvfb). During the schedule a script nudges the mouse every 60-90s, checks the page through Chrome's DevTools endpoint (detects crashes and sign-outs), and sends screenshots to Telegram. Outside the schedule the browser is closed, so you show Offline.
 
 ## 1. Telegram bot
-1. In Telegram, message @BotFather, `/newbot`, copy the token.
-2. Leave `TELEGRAM_CHAT_ID` empty for now; the bot tells you your id in step 3.
+In Telegram, message @BotFather, `/newbot`, copy the token.
 
 ## 2. Droplet
-Ubuntu 24.04, Basic, 2 vCPU / 4 GB, SSH key auth.
+Ubuntu 24.04, Basic Regular 2 GB or more, SSH key auth. Under "Startup scripts", paste the contents of `userdata.sh` with your bot token filled in. Create.
 
-```bash
-scp -r always-green root@DROPLET:/root/      # or git clone
-ssh root@DROPLET
-cd always-green
-cp config.env.example config.env && nano config.env   # token, schedule
-./setup.sh
-```
+The droplet installs everything itself (about 5 minutes; log at `/var/log/always-green-setup.log`).
 
-## 3. Chat id
-Send the bot any message. It replies with your chat id. Put it in `config.env`, run `./setup.sh` again, send `/status` to confirm.
+## 3. Link Telegram
+Send the bot any message. The first chat that writes to it is linked; others are ignored.
+
+Manual alternative to the startup script: copy the repo to the droplet, `cp config.env.example config.env`, fill in the token, `./setup.sh`. After editing any file, run `./make-userdata.sh` to regenerate `userdata.sh`.
 
 ## 4. Log in to Teams (once, before the first scheduled day)
 ```bash

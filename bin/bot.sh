@@ -21,8 +21,11 @@ while true; do
     text=$(jq -r '.message.text // empty' <<<"$upd")
     [[ -n $chat ]] || continue
 
+    # First chat to message the bot claims it; everyone else is ignored after that.
     if [[ -z $TELEGRAM_CHAT_ID ]]; then
-      tg_text "Your chat id is $chat. Put it in config.env and re-run setup.sh." "$chat"
+      sed -i "s|^TELEGRAM_CHAT_ID=.*|TELEGRAM_CHAT_ID=$chat|" "$CONF"
+      TELEGRAM_CHAT_ID=$chat
+      tg_text "Linked to this chat. Commands: /status /on /off"
       continue
     fi
     [[ $chat == "$TELEGRAM_CHAT_ID" ]] || continue
