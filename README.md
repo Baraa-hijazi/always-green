@@ -21,10 +21,11 @@ Manual alternative to the startup script: copy the repo to the droplet, `cp conf
 ```bash
 # on the droplet
 systemctl start ag-vnc ag-browser
-# on your machine
-ssh -L 5900:localhost:5900 root@DROPLET
+cat /root/vnc-password
+# on your machine (5901 locally: macOS Screen Sharing treats localhost:5900 as itself)
+ssh -N -L 5901:localhost:5900 root@DROPLET
 ```
-Open a VNC viewer at `localhost:5900`, sign in, complete MFA, choose "Stay signed in". Then:
+Open `vnc://127.0.0.1:5901` (macOS: Finder > Go > Connect to Server) with that password. Clipboard paste does not reach the droplet, so type your email and password. Sign in, complete MFA, choose "Stay signed in". Then:
 ```bash
 systemctl stop ag-browser ag-vnc
 ```
@@ -44,7 +45,7 @@ Check in the screenshot that your status is green, and from another account or y
 Alerts are sent automatically when the browser dies or Teams lands on a login page.
 
 ## Notes
-- Leave Teams on the Calendar or Activity tab, otherwise incoming chats get marked as read.
+- Teams reopens the last chat on load, so the keepalive switches it to Calendar (Ctrl+Shift+3) before the first screenshot; otherwise incoming chats could get marked as read.
 - Change the schedule in `config.env` and re-run `./setup.sh`. Check with `systemctl list-timers 'ag-*'`.
 - If the nudge interval needs tuning, edit `NUDGE_MIN_SEC` / `NUDGE_MAX_SEC`.
 
