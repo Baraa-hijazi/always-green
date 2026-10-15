@@ -43,6 +43,15 @@ fi
 timedatectl set-timezone "$SCHEDULE_TZ"
 id teams &>/dev/null || useradd -m -s /bin/bash teams
 
+# VNC password (only reachable through an SSH tunnel). Readable by root at /root/vnc-password.
+if [[ ! -f /home/teams/.vnc/passwd ]]; then
+  install -d -m 700 -o teams -g teams /home/teams/.vnc
+  pw=$(head -c 48 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9')
+  ( umask 077; echo "${pw:0:8}" >/root/vnc-password )
+  x11vnc -storepasswd "${pw:0:8}" /home/teams/.vnc/passwd >/dev/null
+  chown teams:teams /home/teams/.vnc/passwd
+fi
+
 install -d "$DEST/bin"
 install -m 755 "$SRC"/bin/*.sh "$DEST/bin/"
 # Keep a chat id the bot already linked when re-running setup.
@@ -199,8 +208,20 @@ nudge() {
   xdotool mousemove "$x" "$y"
 }
 
+# Teams reopens the last chat on load; switch to Calendar (Ctrl+Shift+3) so
+# chats aren't marked read and screenshots don't show chat contents.
+show_calendar() {
+  local wid
+  wid=$(xdotool search --onlyvisible --class google-chrome 2>/dev/null | head -n1)
+  [[ -n $wid ]] || return 0
+  xdotool windowfocus "$wid" 2>/dev/null
+  xdotool key --window "$wid" ctrl+shift+3
+  nap 5
+}
+
 log "started, waiting ${STARTUP_GRACE_SEC}s for Teams to load"
 nap "$STARTUP_GRACE_SEC"
+show_calendar
 
 last_state=$(health)
 tg_photo "Session started $(date '+%a %H:%M'), page: $last_state"
@@ -213,7 +234,7 @@ while true; do
   if [[ $state != "$last_state" ]]; then
     log "state $last_state -> $state"
     case $state in
-      ok) tg_photo "Recovered: Teams page is back" ;;
+      ok) show_calendar; tg_photo "Recovered: Teams page is back" ;;
       browser-down) tg_text "ALERT: browser not responding (systemd will restart it)" ;;
       signed-out) tg_photo "ALERT: Teams is signed out. Log in again over VNC." ;;
     esac
@@ -365,7 +386,10 @@ After=ag-xvfb.service
 [Service]
 User=teams
 EnvironmentFile=/opt/always-green/config.env
-ExecStart=/usr/bin/x11vnc -display ${DISPLAY_NUM} -localhost -rfbport 5900 -forever -shared -nopw
+# macOS Screen Sharing refuses servers without a password; setup.sh creates one.
+ExecStart=/usr/bin/x11vnc -display ${DISPLAY_NUM} -localhost -rfbport 5900 -forever -shared -rfbauth /home/teams/.vnc/passwd
+# x11vnc exits 2 on SIGTERM.
+SuccessExitStatus=2
 Restart=on-failure
 AG_EOF
 

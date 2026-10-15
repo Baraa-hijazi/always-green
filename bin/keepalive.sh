@@ -21,8 +21,20 @@ nudge() {
   xdotool mousemove "$x" "$y"
 }
 
+# Teams reopens the last chat on load; switch to Calendar (Ctrl+Shift+3) so
+# chats aren't marked read and screenshots don't show chat contents.
+show_calendar() {
+  local wid
+  wid=$(xdotool search --onlyvisible --class google-chrome 2>/dev/null | head -n1)
+  [[ -n $wid ]] || return 0
+  xdotool windowfocus "$wid" 2>/dev/null
+  xdotool key --window "$wid" ctrl+shift+3
+  nap 5
+}
+
 log "started, waiting ${STARTUP_GRACE_SEC}s for Teams to load"
 nap "$STARTUP_GRACE_SEC"
+show_calendar
 
 last_state=$(health)
 tg_photo "Session started $(date '+%a %H:%M'), page: $last_state"
@@ -35,7 +47,7 @@ while true; do
   if [[ $state != "$last_state" ]]; then
     log "state $last_state -> $state"
     case $state in
-      ok) tg_photo "Recovered: Teams page is back" ;;
+      ok) show_calendar; tg_photo "Recovered: Teams page is back" ;;
       browser-down) tg_text "ALERT: browser not responding (systemd will restart it)" ;;
       signed-out) tg_photo "ALERT: Teams is signed out. Log in again over VNC." ;;
     esac

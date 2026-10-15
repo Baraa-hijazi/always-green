@@ -32,6 +32,15 @@ fi
 timedatectl set-timezone "$SCHEDULE_TZ"
 id teams &>/dev/null || useradd -m -s /bin/bash teams
 
+# VNC password (only reachable through an SSH tunnel). Readable by root at /root/vnc-password.
+if [[ ! -f /home/teams/.vnc/passwd ]]; then
+  install -d -m 700 -o teams -g teams /home/teams/.vnc
+  pw=$(head -c 48 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9')
+  ( umask 077; echo "${pw:0:8}" >/root/vnc-password )
+  x11vnc -storepasswd "${pw:0:8}" /home/teams/.vnc/passwd >/dev/null
+  chown teams:teams /home/teams/.vnc/passwd
+fi
+
 install -d "$DEST/bin"
 install -m 755 "$SRC"/bin/*.sh "$DEST/bin/"
 # Keep a chat id the bot already linked when re-running setup.
